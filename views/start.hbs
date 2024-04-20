@@ -1,0 +1,95 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <style>
+    * {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.background {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url("https://img.freepik.com/free-vector/technology-background-with-earth-globe-binary-code_53876-117938.jpg?w=826&t=st=1711100248~exp=1711100848~hmac=120f40d57a25451a0e8de133471df8aaee6a3e44950d5528097685eba5e6c086");
+  background-size: cover;
+}
+
+
+.login-container {
+  position: relative;
+  width: 25rem;
+  margin: 0 auto;
+  padding: 20px;
+  border: 2px solid black;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 10px;
+}
+
+.label {
+  font-weight: 800;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.inp {
+  width: 94%;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+.loginbtn {
+  width: 100%;
+  padding: 10px;
+  font-size: large;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.loginbtn:hover {
+  background-color: #006fe6;
+}
+  </style>
+  <body>
+     <div class="background">
+        <div class="login-container">
+                <label class='label' >Enter Name</label>
+                <input class='inp' type="text" 
+                id="names" 
+                placeholder="Enter your name">
+
+                <button class='loginbtn' id="btn" >Login</button>
+        </div>
+    </div>
+ <script>
+    let name = document.querySelector("#names");
+    let btn = document.querySelector("#btn")
+    
+    btn.addEventListener("click",()=>{
+      if(name.value!==""){
+        window.location.href = `/chat?name=${name.value}`;
+         }else{
+      alert("plz enter name")
+    }
+    })
+   
+ </script>
+  </body>
+</html>
