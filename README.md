@@ -1,19 +1,17 @@
-Steps for run the project
-1) Git clone "https://github.com/vishalsharma2729/chatting.git"
-2) After cloning, download the all dependency modules by simplying run the command "npm install"
-3) after its completion Also install nodemon by "npm install -g nodemon" and npm install -save-dev nodemon
-4) Now simply run the project by enter "npm run dev"
-5) After server start paste this url in browser "localhost:8080"
+# Chatting
 
+A simple group chat app hosted on Netlify. Pages are static HTML in `public/`, messages are stored in Netlify Database and served by the `netlify/functions/messages.ts` function (`/api/messages`). The chat page polls for new messages every 2 seconds.
 
+## Run locally
 
+1) `git clone https://github.com/vishalsharma2729/chatting.git`
+2) `npm install`
+3) `npm install -g netlify-cli`
+4) `npm run dev` (runs `netlify dev`) and open the URL it prints
 
-Steps for How to use this website
+## How to use
 
-1)Firstly insert your name and then press login
+1) Enter your name and press Login
+2) Type your message and press Send
 
-2)Now simply type your message and press send
-
-
-Note: Please hit the Url on 2 slides of browser then you can send and recieve the message
-
+Open the site in two browser tabs (or on two devices) to send and receive messages.
