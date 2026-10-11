@@ -83,8 +83,8 @@
     let btn = document.querySelector("#btn")
     
     btn.addEventListener("click",()=>{
-      if(name.value!==""){
-        window.location.href = `/chat?name=${name.value}`;
+      if(name.value.trim()!==""){
+        window.location.href = `/chat?name=${encodeURIComponent(name.value.trim())}`;
          }else{
       alert("plz enter name")
     }

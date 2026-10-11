@@ -169,7 +169,7 @@
   <header class="msger-header">
     <div class="msger-header-title">
       <i class="fas fa-comment-alt"></i>Chatting page(Sharmaji) &ensp;&ensp;&ensp;&ensp;
-      <i class="fas fa-comment-alt"></i>Username:{{user}}
+      <i class="fas fa-comment-alt"></i>Username:<span id="username"></span>
     </div>
       <a style="float: right;" class="btn btn-danger" href="/">Exit</a>
     <div class="msger-header-options">
@@ -188,63 +188,102 @@
   </form>
 </section>
 
-    <script src="/socket.io/socket.io.js"></script>
-  <script >
-      const msgerForm = get(".msger-inputarea");
+  <script>
+const msgerForm = get(".msger-inputarea");
 const msgerInput = get(".msger-input");
 const msgerChat = get(".msger-chat");
-const socket = io();
 
 const BOT_IMG = "https://robohash.org/Terry.png?set=set4";
 const PERSON_IMG = "https://robohash.org/Sheldon.png?set=set4";
 
-const PERSON_NAME = "{{user}}";
+const PERSON_NAME = (new URLSearchParams(location.search).get("name") || "").trim();
+if (!PERSON_NAME) location.href = "/";
+get("#username").textContent = PERSON_NAME;
 
-msgerForm.addEventListener("submit", event => {
+let lastId = 0;
+const sentIds = new Set();
+const pendingTexts = [];
+
+msgerForm.addEventListener("submit", async event => {
   event.preventDefault();
 
-  const msgText = msgerInput.value;
+  const msgText = msgerInput.value.trim();
   if (!msgText) return;
 
-  socket.emit("message",msgText,PERSON_NAME)
-  
-
-  appendMessage(PERSON_NAME, PERSON_IMG, "right", msgText);
   msgerInput.value = "";
+  appendMessage(PERSON_NAME, PERSON_IMG, "right", msgText, new Date());
+  pendingTexts.push(msgText);
+
+  try {
+    const res = await fetch("/api/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: PERSON_NAME, text: msgText })
+    });
+    if (res.ok) sentIds.add((await res.json()).id);
+  } catch (err) {
+    console.error("Failed to send message", err);
+  } finally {
+    const i = pendingTexts.indexOf(msgText);
+    if (i !== -1) pendingTexts.splice(i, 1);
+  }
 });
 
-function appendMessage(name, img, side, text) {
-  //   Simple solution for small apps
+function appendMessage(name, img, side, text, time) {
   const msgHTML = `
     <div class="msg ${side}-msg">
       <div class="msg-img" style="background-image: url(${img})"></div>
 
       <div class="msg-bubble">
         <div class="msg-info">
-          <div class="msg-info-name">${name}</div>
-          <div class="msg-info-time">${formatDate(new Date())}</div>
+          <div class="msg-info-name">${escapeHtml(name)}</div>
+          <div class="msg-info-time">${formatDate(time)}</div>
         </div>
 
-        <div class="msg-text">${text}</div>
+        <div class="msg-text">${escapeHtml(text)}</div>
       </div>
     </div>
   `;
 
   msgerChat.insertAdjacentHTML("beforeend", msgHTML);
-  msgerChat.scrollTop += 500;
+  msgerChat.scrollTop = msgerChat.scrollHeight;
 }
 
-function botResponse(msgText,name) {
-  const delay = msgText.split(" ").length * 100;
-
-  setTimeout(() => {
-    appendMessage(name, BOT_IMG, "left", msgText);
-  },delay);
+// Poll the server for new messages from other users
+async function poll() {
+  try {
+    const res = await fetch(`/api/messages?since=${lastId}`);
+    if (res.ok) {
+      const messages = await res.json();
+      const isFirstLoad = lastId === 0;
+      for (const m of messages) {
+        lastId = Math.max(lastId, m.id);
+        if (sentIds.has(m.id)) continue;
+        // Skip our own message if it arrives before the send request finished
+        const pendingIndex = m.name === PERSON_NAME ? pendingTexts.indexOf(m.text) : -1;
+        if (pendingIndex !== -1) {
+          pendingTexts.splice(pendingIndex, 1);
+          sentIds.add(m.id);
+          continue;
+        }
+        const mine = isFirstLoad && m.name === PERSON_NAME;
+        appendMessage(m.name, mine ? PERSON_IMG : BOT_IMG, mine ? "right" : "left", m.text, new Date(m.createdAt));
+      }
+    }
+  } catch (err) {
+    console.error("Failed to load messages", err);
+  }
+  setTimeout(poll, 2000);
 }
+poll();
 
 // Utils
 function get(selector, root = document) {
   return root.querySelector(selector);
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 }
 
 function formatDate(date) {
@@ -253,16 +292,7 @@ function formatDate(date) {
 
   return `${h.slice(-2)}:${m.slice(-2)}`;
 }
-
-function random(min, max) {
-  return Math.floor(Math.random() * (max - min) + min);
-}
-
-socket.on("message",(message,data)=>{
-    botResponse(message,data);
-})
-    
-    </script>
+  </script>
 
 </body>
 </html>
